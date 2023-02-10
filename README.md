@@ -38,7 +38,23 @@ It doesn't show the hole text:
 
 ![image](https://user-images.githubusercontent.com/58916022/217812118-da8da3c7-c498-40d0-80ea-ba0b418a1dcd.png)
 
-Solution can be found in this [other rep](https://github.com/Rafaelatff/_HAL-STM32F401-UART).
+Solution can be found in this [other rep](https://github.com/Rafaelatff/_HAL-STM32F401-UART). Sadly it didn't worked.
+
+Also, at bottom of '' we add the NVIC configuration (still not working). See following code for NVIC:
+
+```c
+    /**Configure the Systick interrupt time
+    */
+  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
+
+    /**Configure the Systick
+    */
+  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
+
+  /* SysTick_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0); //changed to 15, 15
+```
+NOTE: I am no longer using BOOT0 and BOOT1, I can disconnect those pins now. After I did it, it worked perfectly!
 
 Just copy the line for the 'HAL_UART_Transmit' and changed to '&huart1'. Also used the TeraTerm but now connected to USB Serial Port (It uses PA9 and PA10 pins).
 
@@ -46,7 +62,7 @@ Just copy the line for the 'HAL_UART_Transmit' and changed to '&huart1'. Also us
 
 Add the following code to the 'main.c' file:
 
-´´´c
+```c
 #include <stdarg.h> // at begin
 #define BL_DEBUG_MSG_EN
 void printmsg(char *format,...); // prototype of the function
@@ -54,5 +70,24 @@ void printmsg(char *format,...); // prototype of the function
 #define C_UART &huart2
 
 printmsg("current_tick = %d\r\n", current_tick); // instead of HAL functions
+```
+Also, the content in 'main' -> 'while(1)' were changed to:
 
-´´´
+```c
+	  if (HAL_GPIO_ReadPin(B1_GPIO_Port,B1_Pin) == GPIO_PIN_RESET){ // NUCLEO is low when pressed
+	  	printmsg ("BL_DEBUG_MSG:Button is pressed .. going to BL mode\n\r");
+	  	// we should continue in bootloader mode
+	  	bootloader_uart_read_data();
+	  } else {
+	  	printmsg("BL_DEBUG_MSG: Button is not pressed .. executing user app\n\r");
+	  	bootloader_jump_to_user_app();
+	  }
+```
+ Button pressed when initializing?
+* Y: bootloader_uart_read_data()
+* N: bootloader_jump_to_user_app()
+
+The function prototypes were added on 'main.h' file.
+
+Then, we create with STM32CubeMX a new program called 'user_app_F401', we config the IT for the B1 button. 
+
