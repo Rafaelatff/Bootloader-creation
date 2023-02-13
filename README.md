@@ -152,3 +152,141 @@ And, we need to add/change the macro for the VECT_TAB_OFFSET to match our new Ve
 In Udemy course, for the STM32 board of the instructor, initialization code showes two options for the VTOR address, being SRAM or Flash. (Investigate it better). New value is a sum of the FLASH_ADDR + offset.
 
 Both codes were programmed in the NUCLEO board. When running, user code starts. When turn on the NUCLEO board holding the B1 at the same time, code stays inside bootloader.
+
+In 'main.h' file, we added the macros and functions prototypes.
+```c
+/* USER CODE BEGIN EFP */
+void bootloader_uart_read_data(void);
+void bootloader_jump_to_user_app(void);
+
+void bootloader_handle_getver_cmd(uint8_t *bl_rx_buffer);
+void bootloader_handle_gethelp_cmd(uint8_t *pBuffer);
+void bootloader_handle_getcid_cmd(uint8_t *pBuffer);
+void bootloader_handle_getrdp_cmd(uint8_t *pBuffer);
+void bootloader_handle_go_cmd(uint8_t *pBuffer);
+void bootloader_handle_flash_erase_cmd(uint8_t *pBuffer);
+void bootloader_handle_mem_write_cmd(uint8_t *pBuffer);
+void bootloader_handle_en_rw_protect(uint8_t *pBuffer);
+void bootloader_handle_mem_read (uint8_t *pBuffer);
+void bootloader_handle_read_sector_protection_status(uint8_t *pBuffer);
+void bootloader_handle_read_otp(uint8_t *pBuffer);
+void bootloader_handle_dis_rw_protect(uint8_t *pBuffer);
+/* USER CODE END EFP */
+
+/* USER CODE BEGIN Private defines */
+#define FLASH_SECTOR2_BASE_ADDRESS 0x08008000U
+//#define  <command name >	<command_code>
+
+//This command is used to read the bootloader version from the MCU
+// Packet: Length to follow (1B) + Command code (1B) + CRC (4B) = 6B
+// 1B answer
+// Example: LtF = 5, CC = 0x51
+#define BL_GET_VER				0x51
+
+//This command is used to know what are the commands supported by the bootloader
+#define BL_GET_HELP				0x52
+
+//This command is used to read the MCU chip identification number
+// 2B answer
+#define BL_GET_CID				0x53
+
+//This command is used to read the FLASH Read Protection level
+#define BL_GET_RDP_STATUS		0x54
+
+//This command is used to jump bootloader to specified address
+// LtF (1B) + CC (1B) + Mem add (LE) (4B) + CRC (4B)
+// 1B answer
+#define BL_GO_TO_ADDR			0x55
+
+//This command is used to mass erase or sector erase of the user flash
+// LtF (1B) + CC (1B) + Sector Numb (1B) + Number of sectors (1B) + CRC (4B)
+// 1B answer (status)
+#define BL_FLASH_ERASE          0x56
+
+//This command is used to write data in to different memories of the MCU
+// LtF (1B) + CC (1B) + Base Mem add (LE) (4B) + Payload lenght (x) (1B)
+// + payload (XB) + CRC (4B)
+// 1B answer
+#define BL_MEM_WRITE			0x57
+
+//This command is used to enable or disable read/write protect on different sectors of the user flash .
+// LtF (1B) + CC (1B) + sector details (1B, being sector numbers encoded in 8bits)
+// + Protection Mode (1 - write, 2 R/W) (1B) + CRC (4B)
+// 1B answer
+#define BL_EN_RW_PROTECT		0x58
+
+//This command is used to read data from different memories of the microcontroller.
+#define BL_MEM_READ				0x59
+
+//This command is used to read all the sector protection status.
+// LtF (1B) + CC (1B) + CRC (4B)
+// 2B answer
+#define BL_READ_SECTOR_P_STATUS	0x5A
+
+//This command is used to read the OTP contents.
+#define BL_OTP_READ				0x5B
+
+//This command is used disable all sector read/write protection
+// LtF (1B) + CC (1B) + CRC (4B)
+// 1B answer
+#define BL_DIS_R_W_PROTECT				0x5C
+```
+
+In 'main.c' code we implemented the 'bootloader_uart_read_data' function and some global variables:
+```c
+#define BL_RX_LEN 200
+uint8_t bl_rx_buffer[BL_RX_LEN];
+
+void  bootloader_uart_read_data(void){
+    uint8_t rcv_len=0;
+	while(1){
+		memset(bl_rx_buffer,0,200);
+		//here we will read and decode the commands coming from host
+		//first read only one byte from the host , which is the "length" field of the command packet
+		HAL_UART_Receive(C_UART,bl_rx_buffer,1,HAL_MAX_DELAY);
+		rcv_len= bl_rx_buffer[0];
+		HAL_UART_Receive(C_UART,&bl_rx_buffer[1],rcv_len,HAL_MAX_DELAY);
+		switch(bl_rx_buffer[1]){
+            case BL_GET_VER:
+                bootloader_handle_getver_cmd(bl_rx_buffer); //prototype in main.h
+                break;
+            case BL_GET_HELP:
+                bootloader_handle_gethelp_cmd(bl_rx_buffer);
+                break;
+            case BL_GET_CID:
+                bootloader_handle_getcid_cmd(bl_rx_buffer);
+                break;
+            case BL_GET_RDP_STATUS:
+                bootloader_handle_getrdp_cmd(bl_rx_buffer);
+                break;
+            case BL_GO_TO_ADDR:
+                bootloader_handle_go_cmd(bl_rx_buffer);
+                break;
+            case BL_FLASH_ERASE:
+                bootloader_handle_flash_erase_cmd(bl_rx_buffer);
+                break;
+            case BL_MEM_WRITE:
+                bootloader_handle_mem_write_cmd(bl_rx_buffer);
+                break;
+            case BL_EN_RW_PROTECT:
+                bootloader_handle_en_rw_protect(bl_rx_buffer);
+                break;
+            case BL_MEM_READ:
+                bootloader_handle_mem_read(bl_rx_buffer);
+                break;
+            case BL_READ_SECTOR_P_STATUS:
+                bootloader_handle_read_sector_protection_status(bl_rx_buffer);
+                break;
+            case BL_OTP_READ:
+                bootloader_handle_read_otp(bl_rx_buffer);
+                break;
+						case BL_DIS_R_W_PROTECT:
+                bootloader_handle_dis_rw_protect(bl_rx_buffer);
+                break;
+             default:
+                printmsg("BL_DEBUG_MSG:Invalid command code received from host \n");
+                break;
+		}
+	}
+}
+```
