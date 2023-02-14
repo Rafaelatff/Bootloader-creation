@@ -397,3 +397,30 @@ uint8_t get_bootloader_version(void){
   return (uint8_t)BL_VERSION; // defined in main.h
 }
 ```
+We will start using [python](https://www.python.org/downloads/) now. The scripts for python can be found [here](https://github.com/niekiran/BootloaderProjectSTM32/tree/master/SourceCode).
+
+While installing Python, select the option to enable PATH within python.
+
+Then open the prompt command and install the 'pyserial':
+
+![image](https://user-images.githubusercontent.com/58916022/218729722-e6654ece-2e87-4aff-8433-66ad44a2651a.png)
+
+Then using the command 'cd' go to the folder where the python code (.py) is located. Just type 'python' and the name of the code (STM32_Programmer_V1.py) and press enter. The code will ask for a COM port to communicate. If you don't know the COM port, type enter again to see the options.
+
+![image](https://user-images.githubusercontent.com/58916022/218730141-3a6995ca-95ea-47d4-b083-e9d34d2bc995.png)
+
+Open the code again and select the desired COM port to communicate:
+
+![image](https://user-images.githubusercontent.com/58916022/218730462-45cb1f38-23d0-40fe-8822-2361d7c32193.png)
+
+Since I didn't program the NUCLEO board, no version returned:
+
+![image](https://user-images.githubusercontent.com/58916022/218750357-9bfaa7a5-aca4-4bb0-b050-a7afae529151.png)
+
+Now I program the NUCLEO board, I tried again (just pressed any button and 1 again):
+
+![image](https://user-images.githubusercontent.com/58916022/218750631-3de3c135-5583-445d-a274-93458eccc1d4.png)
+
+
+
+
