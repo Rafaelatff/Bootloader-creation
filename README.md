@@ -470,6 +470,19 @@ uint16_t get_mcu_chip_id(void){
 
 I created a new code for the REV_ID of the chip, the results were:
 
+![image](https://user-images.githubusercontent.com/58916022/219363925-4ca31e19-13fd-43a9-8949-258c44400a97.png)
+
+I just: 
+```c
+uint16_t get_mcu_chip_rev(){
+	uint32_t crev;
+	crev = ((DBGMCU->IDCODE) >> 16) & 0xFFFF;
+
+	return  (uint16_t) crev;
+}
+
+
+```
 
 
 
