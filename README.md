@@ -421,6 +421,55 @@ Now I program the NUCLEO board, I tried again (just pressed any button and 1 aga
 
 ![image](https://user-images.githubusercontent.com/58916022/218750631-3de3c135-5583-445d-a274-93458eccc1d4.png)
 
+I am skipping the 'get help' function that shows the commands for the bootloader, but next we can see on reference manual of the microcontroller the possible return values for the Chip ID:
+
+![image](https://user-images.githubusercontent.com/58916022/219349107-0f4fce7e-6ccb-4f35-8bcc-56a4f1943c04.png)
+
+The necessary codes were:
+
+```C
+/*Helper function to handle BL_GET_CID command */
+void bootloader_handle_getcid_cmd(uint8_t *pBuffer){
+	uint16_t bl_cid_num = 0;
+	printmsg("BL_DEBUG_MSG:bootloader_handle_getcid_cmd\n");
+
+    //Total length of the command packet
+	uint32_t command_packet_len = bl_rx_buffer[0]+1 ;
+
+	//extract the CRC32 sent by the Host
+	uint32_t host_crc = *((uint32_t * ) (bl_rx_buffer+command_packet_len - 4) ) ;
+
+	if (! bootloader_verify_crc(&bl_rx_buffer[0],command_packet_len-4,host_crc)) {
+        printmsg("BL_DEBUG_MSG:checksum success !!\n");
+        bootloader_send_ack(pBuffer[0],2);
+        bl_cid_num = get_mcu_chip_id();
+        printmsg("BL_DEBUG_MSG:MCU id : %d %#x !!\n",bl_cid_num, bl_cid_num);
+        bootloader_uart_write_data((uint8_t *)&bl_cid_num,2);
+
+	}else {
+        printmsg("BL_DEBUG_MSG:checksum fail !!\n");
+        bootloader_send_nack();
+	}
+}
+
+//Read the chip identifier or device Identifier
+uint16_t get_mcu_chip_id(void){
+/*
+	The STM32F446xx MCUs integrate an MCU ID code. This ID identifies the ST MCU partnumber
+	and the die revision. It is part of the DBG_MCU component and is mapped on the
+	external PPB bus (see Section 33.16 on page 1304). This code is accessible using the
+	JTAG debug pCat.2ort (4 to 5 pins) or the SW debug port (two pins) or by the user software.
+	It is even accessible while the MCU is under system reset. */
+	uint16_t cid;
+	cid = (uint16_t)(DBGMCU->IDCODE) & 0x0FFF;
+	return  cid;
+}
+```
+
+![image](https://user-images.githubusercontent.com/58916022/219359142-b29c7402-4845-403e-b90d-4fa13d7d0f1d.png)
+
+I created a new code for the REV_ID of the chip, the results were:
+
 
 
 
