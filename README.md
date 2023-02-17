@@ -484,6 +484,10 @@ uint16_t get_mcu_chip_rev(){
 
 The option that must be used to program a binary code inside the mcu is: BL_MEM_WRITE
 
+To generate binary file on STM32CubeIDE just:
+
+![image](https://user-images.githubusercontent.com/58916022/219720939-befb3b61-9696-40f2-950f-1ba6af973439.png)
+
 Class 67 of the couse shows how to generate the .bin file using Keil.
 
 HHD hex editor were use to open and visualize the binary file.
