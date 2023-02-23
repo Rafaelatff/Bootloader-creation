@@ -494,4 +494,27 @@ HHD hex editor were use to open and visualize the binary file.
 
 Binary file must be in the same folder as Python file is located.
 
+### Options Bytes and Flash Sector Protection
+
+Sector details encoded in 8 bits, each bit field represents one sector (bit 0 = sector 0).
+
+* 1 = protection
+* 0 = no protection
+
+Protection mode:
+
+* 1 = write protection
+* 2 = R/W protection
+
+Lenght to follow + Command Code + Sector details + Protection mode + CRC
+
+To find the FLASH_OPTCR address, we take the base register address + its offset:
+
+![image](https://user-images.githubusercontent.com/58916022/220892523-cb8e08d4-ae58-4754-b34a-29ab24a2a566.png)
+
+![image](https://user-images.githubusercontent.com/58916022/220892443-b99aa58d-d272-43cd-8d9a-2629519ec51e.png)
+
+![image](https://user-images.githubusercontent.com/58916022/220897649-8aa56c2b-a813-44b7-a7d3-7cebf319159a.png)
+
+
 
